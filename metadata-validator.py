@@ -1,5 +1,6 @@
 import json
 import shutil
+import subprocess
 import os
 import glob
 import sys
@@ -92,10 +93,9 @@ def makeValidFilename(filename):
 
 
 def checkCCodeGenerationValid(element_name, metadata_path, files, path):
-    asn1scc_command = ASN1SCC + " " +  ASN1SCC_ARGS + " -o " + path + " " + (" ".join(files))
-    #print(asn1scc_command)
+    asn1scc_command = [ASN1SCC, *ASN1SCC_ARGS.split(), "-o", path, *files]
 
-    if os.system(asn1scc_command) != 0:
+    if subprocess.run(asn1scc_command).returncode != 0:
         logError(metadata_path , CODE_GENERATION_ERROR_MESSAGE, element_name)
         return False
     else:
@@ -103,9 +103,9 @@ def checkCCodeGenerationValid(element_name, metadata_path, files, path):
 
 
 def compileFile(src, path):
-    cc_command = CC + " " +  CC_ARGS + " -I " + path + " " + src + " -o " + os.path.join(path, os.path.splitext((src))[0]) +  ".o"
-    #print(cc_command)
-    return os.system(cc_command)
+    obj = os.path.join(path, os.path.splitext(src)[0]) + ".o"
+    cc_command = [CC, *CC_ARGS.split(), "-I", path, src, "-o", obj]
+    return subprocess.run(cc_command).returncode
 
 
 def checkCompilationValid(element_name, metadata_path, path):
@@ -115,10 +115,9 @@ def checkCompilationValid(element_name, metadata_path, path):
 
 def checkLibraryCreationValid(element_name, metadata_path, path):
     lib_filepath = os.path.join(path, "lib.a")
-    ar_command = AR + " " + AR_ARGS + " " + lib_filepath  +  " ".join(glob.glob(os.path.join(path + "*.o")))
-    #print(ar_command)
+    ar_command = [AR, *AR_ARGS.split(), lib_filepath, *glob.glob(os.path.join(path, "*.o"))]
 
-    if os.system(ar_command) != 0:
+    if subprocess.run(ar_command).returncode != 0:
         logError(metadata_path + ":" + element_name, CODE_GENERATION_ERROR_MESSAGE, lib_filepath)
         return False
     else:
