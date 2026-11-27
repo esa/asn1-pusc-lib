@@ -1,6 +1,7 @@
 /.build
 /.dist
 /*.pro.user
+__pycache__
 *.autosave
 *.swp
 *.7z
